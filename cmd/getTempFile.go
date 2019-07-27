@@ -16,9 +16,13 @@ import (
 // for our source file by checking if an MD5 hash of our
 // file is a key in the store. If the hash is unseen then
 // we can Pandoc and generate a new file.
-func getTempFile(mdFile string, cssFile string) string {
+func getTempFile(mdFile string, cssFile string, mdvDir string) string {
+	// Create mdv $HOME .dir if it doesn't exist.
+	if _, err := os.Stat(mdvDir); os.IsNotExist(err) {
+		os.Mkdir(mdvDir, 0700)
+	}
 	// Configure Badger DB connection
-	badgerConfig := badger.DefaultOptions(os.Getenv("HOME") + "/.mdv/badger")
+	badgerConfig := badger.DefaultOptions(mdvDir + "/badger")
 	fmt.Println(badgerConfig)
 	db, err := badger.Open(badgerConfig)
 	handle(err)

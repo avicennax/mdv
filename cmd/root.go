@@ -29,6 +29,7 @@ import (
 
 var cfgFile string
 var cssFile string
+var mdvDir string
 
 func handle(err error) {
 	if err != nil {
@@ -53,7 +54,7 @@ var rootCmd = &cobra.Command{
 		handle(err)
 
 		// Get HTML file path generated from markdown source
-		tempFilePath := getTempFile(mdFile, cssFile)
+		tempFilePath := getTempFile(mdFile, cssFile, mdvDir)
 
 		// Open HTML file via default browser
 		openCmd := exec.Command("open", tempFilePath)
@@ -74,6 +75,9 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 
+	// Set mdv directory var
+	mdvDir = os.Getenv("HOME") + "/.mdv"
+
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
@@ -81,7 +85,7 @@ func init() {
 		&cfgFile,
 		"config",
 		"",
-		"config file (default "+os.Getenv("HOME")+"/.mdv/config.yaml)",
+		"config file (default "+mdvDir+"/config.yaml)",
 	)
 
 	// Cobra also supports local flags, which will only run
@@ -114,7 +118,6 @@ func initConfig() {
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".mdv/config.yaml")
 	}
-
 	viper.AutomaticEnv() // read in environment variables that match
 
 	// If a config file is found, read it in.
