@@ -8,6 +8,7 @@ import (
 	"path"
 
 	badger "github.com/dgraph-io/badger"
+	"github.com/spf13/viper"
 )
 
 // Return the path of HTML file generated via Pandoc
@@ -16,7 +17,11 @@ import (
 // for our source file by checking if an MD5 hash of our
 // file is a key in the store. If the hash is unseen then
 // we can Pandoc and generate a new file.
-func getTempFile(mdFile string, cssFile string, mdvDir string) string {
+func getTempFile(mdFile string, mdvDir string) string {
+	// Use Viper to fetch CSS filepath
+	cssFile := viper.GetString("css")
+	fmt.Printf("Using CSS: %s\n\n", cssFile)
+
 	// Create mdv $HOME .dir if it doesn't exist.
 	if _, err := os.Stat(mdvDir); os.IsNotExist(err) {
 		os.Mkdir(mdvDir, 0700)
