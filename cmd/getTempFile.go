@@ -51,18 +51,27 @@ func getTempFile(mdFile string, cssFile string, mdvDir string) string {
 		handle(err)
 		tempFilePath = path.Join(tempDir, "temp.html")
 
-		// Generate HTML via Pandoc
-		// TODO: catch errors raised by Pandoc.
-		pandocCmd := exec.Command(
-			"pandoc",
+		args := []string{
 			"-o", tempFilePath,
-			"--css", cssFile,
 			"--self-contained",
 			"--quiet",
 			mdFile,
+		}
+		// Check to see if css is defined.
+		_, err = os.Stat(cssFile)
+		if os.IsNotExist(err) {
+			fmt.Printf("CSS file: '%s' not found\n", cssFile)
+		} else {
+			args = append([]string{"--css", cssFile}, args...)
+		}
+
+		// Generate HTML via Pandoc
+		// TODO: catch errors raised by Pandoc.
+		pandocCmd := exec.Command(
+			"pandoc", args...
 		)
 		pandocCmd.Run()
-		fmt.Println(os.Getenv("HOME") + "/.pandoc/default.css")
+		fmt.Println(cssFile)
 
 		// Update cache
 		fmt.Println("Updating cache ...")

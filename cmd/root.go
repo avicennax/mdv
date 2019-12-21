@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"log"
+	"path"
 	"os"
 	"os/exec"
 
@@ -99,6 +100,7 @@ func init() {
 		os.Getenv("HOME")+"/.pandoc/default.css",
 		"CSS file used to format output HTML",
 	)
+	viper.BindPFlag("css", rootCmd.PersistentFlags().Lookup("css"))
 }
 
 // initConfig reads in config file and ENV variables if set.
@@ -115,10 +117,10 @@ func initConfig() {
 		}
 
 		// Search config in home directory with name ".mdv" (without extension).
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".mdv/config.yaml")
+		viper.AddConfigPath(path.Join(home, ".mdv"))
+		viper.SetConfigName("config.yaml")
 	}
-	viper.AutomaticEnv() // read in environment variables that match
+	viper.AutomaticEnv() // Read in environment variables that match
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {

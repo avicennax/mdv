@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "mdv/cmd"
+import "github.com/avicennax/mdv/cmd"
 
 func main() {
 	cmd.Execute()
