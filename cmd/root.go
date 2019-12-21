@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"github.com/spf13/cobra"
 	"log"
-	"path"
 	"os"
 	"os/exec"
+	"path"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
@@ -77,7 +77,7 @@ func init() {
 	cobra.OnInitialize(initConfig)
 
 	// Set mdv directory var
-	mdvDir = path.Join(os.Getenv("HOME"),  ".mdv")
+	mdvDir = path.Join(os.Getenv("HOME"), ".mdv")
 
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
@@ -86,7 +86,7 @@ func init() {
 		&cfgFile,
 		"config",
 		"",
-		"config file (default " + mdvDir + "/config.yaml)",
+		"config file (default "+mdvDir+"/config.yaml)",
 	)
 
 	// Cobra also supports local flags, which will only run

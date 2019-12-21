@@ -38,9 +38,9 @@ func getTempFile(mdFile string, mdvDir string) string {
 	fmt.Println(fileHash)
 	var pathCopy []byte
 	err = db.View(func(txn *badger.Txn) error {
-		path, err := txn.Get([]byte(fileHash))
+		htmlFilePath, err := txn.Get([]byte(fileHash))
 		if err == nil {
-			pathCopy, err = path.ValueCopy(nil)
+			pathCopy, err = htmlFilePath.ValueCopy(nil)
 			return nil
 		}
 		return err
@@ -73,7 +73,7 @@ func getTempFile(mdFile string, mdvDir string) string {
 		// Generate HTML via Pandoc
 		// TODO: catch errors raised by Pandoc.
 		pandocCmd := exec.Command(
-			"pandoc", args...
+			"pandoc", args...,
 		)
 		pandocCmd.Run()
 		fmt.Println(cssFile)
