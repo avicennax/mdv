@@ -27,7 +27,9 @@ func getTempFile(mdFile string, mdvDir string) string {
 		os.Mkdir(mdvDir, 0700)
 	}
 	// Configure Badger DB connection
-	badgerConfig := badger.DefaultOptions(mdvDir + "/badger")
+	badgerConfig := badger.DefaultOptions(path.Join(mdvDir + "badger"))
+	// Quiet verbose Badger logging
+	badgerConfig.Logger = nil
 	fmt.Println(badgerConfig)
 	db, err := badger.Open(badgerConfig)
 	handle(err)
