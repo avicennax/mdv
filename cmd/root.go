@@ -18,7 +18,6 @@ limitations under the License.
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -29,41 +28,64 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
-var cssFile string
-var mdvDir string
+var (
+	cfgFile string
+	cssFile string
+	mdvDir  string
 
-func handle(err error) {
-	if err != nil {
-		log.Fatal(err)
+	// rootCmd represents the base command when called without any subcommands
+	rootCmd = &cobra.Command{
+		Use:   "mdv",
+		Short: "Creates Browser viewable HTML files from markdown sources.",
+
+		// Return the path of HTML file generated via Pandoc
+		// for a user specified markdown file. We check a
+		// BadgerDB store to see if a HTML file has been generated
+		// for our source file by checking if an MD5 hash of our
+		// file is a key in the store. If the hash is unseen then
+		// we can Pandoc and generate a new file.
+		Run: func(cmd *cobra.Command, args []string) {
+			// Sanity checks
+			preflightChecks(args)
+
+			mdFile := args[0]
+			force, _ := cmd.Flags().GetBool("force")
+
+			// Get HTML file path generated from markdown source
+			// Create mdv $HOME .dir if it doesn't exist.
+			if _, err := os.Stat(mdvDir); os.IsNotExist(err) {
+				os.Mkdir(mdvDir, 0700)
+			}
+
+			db := initBadger(mdvDir)
+			defer db.Close()
+
+			// Check if we get a cache hit
+			fileHash, err := hashFileMd5(mdFile)
+			fatal(err)
+			path, err := checkCache(fileHash, db)
+			fmt.Println(fileHash)
+
+			// We render the HTML if the cache misses or the user passes
+			// the 'force' flag.
+			var tempFilePath string
+			if err == nil && !force {
+				fmt.Println("Cache hit.")
+				tempFilePath = string(path)
+			} else {
+				pandocArgs, tempFilePath := initPandocArgs(mdFile, tempFilePath)
+				runPandoc(pandocArgs)
+				updateCache(fileHash, tempFilePath, db)
+			}
+
+			// Open HTML file via default browser
+			openCmd := exec.Command("open", tempFilePath)
+			err = openCmd.Run()
+			fatal(err)
+
+		},
 	}
-}
-
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "mdv",
-	Short: "Creates Browser viewable HTML files from markdown sources.",
-	Run: func(cmd *cobra.Command, args []string) {
-		// Grab markdown source
-		if (len(args)) == 0 {
-			log.Fatal("Need to specify MD file to preview.")
-			return
-		}
-		mdFile := args[0]
-
-		// Check to see that Pandoc is on PATH
-		_, err := exec.LookPath("pandoc")
-		handle(err)
-
-		// Get HTML file path generated from markdown source
-		tempFilePath := getTempFile(mdFile, mdvDir)
-
-		// Open HTML file via default browser
-		openCmd := exec.Command("open", tempFilePath)
-		openCmd.Run()
-
-	},
-}
+)
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
@@ -74,26 +96,24 @@ func Execute() {
 	}
 }
 
+// Here you will define your flags and configuration settings.
+// Cobra supports persistent flags, which, if defined here,
+// will be global for your application.
 func init() {
 	cobra.OnInitialize(initConfig)
 
 	// Set mdv directory var
 	mdvDir = path.Join(os.Getenv("HOME"), ".mdv")
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	// Specifies path to optional parameter cfg file.
+	// We can bind our parameters to config key-value pairs
+	// loaded by Viper.
 	rootCmd.PersistentFlags().StringVar(
 		&cfgFile,
 		"config",
 		"",
 		"config file (default "+mdvDir+"/config.yaml)",
 	)
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-
 	// CSS for HTML formatting
 	rootCmd.PersistentFlags().StringVar(
 		&cssFile,
@@ -102,6 +122,9 @@ func init() {
 		"CSS file used to format output HTML",
 	)
 	viper.BindPFlag("css", rootCmd.PersistentFlags().Lookup("css"))
+
+	// Force render of Markdown flag
+	rootCmd.PersistentFlags().BoolP("force", "f", false, "Force Pandoc render - even source hasn't changed")
 }
 
 // initConfig reads in config file and ENV variables if set.

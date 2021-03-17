@@ -4,8 +4,15 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"io"
+	"log"
 	"os"
 )
+
+func fatal(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 // Shameless C&P: https://mrwaggel.be/post/generate-md5-hash-of-a-file-in-golang/
 func hashFileMd5(filePath string) (string, error) {
