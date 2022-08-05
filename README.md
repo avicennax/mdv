@@ -4,6 +4,8 @@ A janky little CLI markdown viewer\*
 
 ----
 
+## Overview
+
 Opens your default browser to view a Pandoc-generated HTML of
 your markdown. You can bring your own CSS if you want.
 
@@ -11,3 +13,8 @@ As a little bonus it also caches HTML renders of the markdown source by mapping 
 
 \*Technically the CLI tool just calls Pandoc and opens the generated file
 with your default application for opening HTML files.
+
+## Dependencies
+
+- [Go](https://go.dev/dl/)
+- [Pandoc](https://pandoc.org/installing.html)
